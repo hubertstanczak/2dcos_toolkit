@@ -1,3 +1,4 @@
+from curses import raw
 from pathlib import Path
 
 from .models import SessionState
@@ -32,15 +33,19 @@ def _sanitize_job_name(job_name: str, *, max_len: int = 60) -> str:
     avoid accidental nested paths in exported artifacts.
     """
     raw = (job_name or "").strip()
-    pseudo_path = Path(f"{raw}.txt")  # use .stem logic inside make_base_name
-    safe = make_base_name(pseudo_path, max_len=max_len)
+    safe = make_base_name(raw, max_len=max_len)
 
     if safe == "_unnamed":
         safe = _DEFAULT_JOB_NAME
 
+    if raw and safe == "dataset" and raw.lower() != "dataset":
+        safe = _DEFAULT_JOB_NAME
+    
+    if safe and set(safe) <= {"_", "-"}:
+        safe = _DEFAULT_JOB_NAME
+
     if raw and safe != raw:
         print(f" job_name sanitized: {raw!r} -> {safe!r}")
-
     return safe
 
 
