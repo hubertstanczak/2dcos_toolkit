@@ -7,6 +7,43 @@ from .utils import ensure_dir, make_base_name
 
 PathLike = str | Path
 
+def _dedupe_by_dataset_name(cd_files: list[str]) -> list[str]:
+    """De-duplicate discovered files by canonical dataset name.
+
+    The canonical name is derived the same way as in the parsing loop
+    (make_base_name from the filename). If multiple paths map to the same
+    dataset name (common after repeated ZIP uploads in Colab), keep the newest
+    file (by mtime; tie-breaker: larger size).
+
+    Parameters
+    ----------
+    cd_files:
+        List of discovered file paths (strings).
+
+    Returns
+    -------
+    list[str]
+        File paths reduced to unique dataset names (stable order).
+    """
+    chosen: dict[str, tuple[str, float, int]] = {}  # name -> (path, mtime, size)
+    order: list[str] = []
+
+    for f in cd_files:
+        name = make_base_name(Path(f), max_len=80)
+        st = Path(f).stat()
+        mtime = float(st.st_mtime)
+        size = int(st.st_size)
+
+        if name not in chosen:
+            chosen[name] = (f, mtime, size)
+            order.append(name)
+            continue
+
+        _, old_mtime, old_size = chosen[name]
+        if (mtime, size) > (old_mtime, old_size):
+            chosen[name] = (f, mtime, size)
+
+    return [chosen[name][0] for name in order]
 
 def load_input_data_and_parse(
     session: SessionState,
@@ -75,6 +112,8 @@ def load_input_data_and_parse(
         [str(p) for p in root_paths],
         input_dir=str(session.input_dir),
     )
+    
+    cd_files = _dedupe_by_dataset_name(cd_files)
 
     if not cd_files:
         scanned = ", ".join(str(p) for p in root_paths)
