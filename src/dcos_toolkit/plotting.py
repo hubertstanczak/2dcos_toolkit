@@ -12,7 +12,8 @@ from matplotlib.gridspec import GridSpec
 from .models import SessionState
 from .utils import ensure_dir
 from .peaks import find_cross_peaks_max, find_cross_peaks_min, find_diagonal_peaks
-
+import logging
+logger = logging.getLogger(__name__)
 
 def lambda_cut(
     axis_vals: np.ndarray,
@@ -642,15 +643,15 @@ def visualize_session(
             try:
                 i = int(raw)
             except Exception:
-                print(f" Visualization: ignored invalid dataset index: {raw!r}")
+                logger.debug(f" Visualization: ignored invalid dataset index: {raw!r}")
                 continue
             if 0 <= i < len(session.datasets):
                 indices.append(i)
             else:
-                print(f" Visualization: ignored out-of-range dataset index: {i} (valid: 0..{len(session.datasets)-1})")
+                logger.debug(f" Visualization: ignored out-of-range dataset index: {i} (valid: 0..{len(session.datasets)-1})")
 
         if not indices:
-            print(" Visualization: no valid dataset indices to visualize.")
+            logger.info("Visualization: no valid dataset indices to visualize.")
             return
 
     errors: list[tuple[str, str]] = []
@@ -659,15 +660,14 @@ def visualize_session(
         ds = session.datasets[idx]
         name = ds.name
 
-        print(f"\n Visualising dataset [{idx}]: {name}")
+        logger.info(f"\n Visualising dataset: {name}")
 
         if ds.sync is None:
-            print(f" Visualization: missing synchronous matrix for dataset: {name}. Run 2D-COS cell first.")
+            logger.info(f" Visualization: missing synchronous matrix for dataset: {name}. Run 2D-COS cell first.")
             continue
 
         if ds.async_ is None:
-            print(f" Visualization: asynchronous matrix is missing for dataset: {name} (plot will omit async panel).")
-
+            logger.info(f" Visualization: asynchronous matrix is missing for dataset: {name} (plot will omit async panel).")
         try:
             lam = ds.lambda_axis
             sync_df = pd.DataFrame(ds.sync, index=lam, columns=lam)
@@ -713,9 +713,9 @@ def visualize_session(
             eff_mark_sync = bool(mark_peaks_sync and (n_diag + n_cmax + n_cmin > 0))
             eff_mark_async = bool(mark_peaks_async and (n_acmax + n_acmin > 0))
 
-            print(f"   λ range: {sync_df.index.min():.1f} – {sync_df.index.max():.1f} nm")
-            print(f"   output figure: {out_png}")
-            print(
+            logger.debug(f"   λ range: {sync_df.index.min():.1f} – {sync_df.index.max():.1f} nm")
+            logger.debug(f"   output figure: {out_png}")
+            logger.debug(
                 "   peaks: "
                 f"sync={'ON' if eff_mark_sync else 'OFF'} "
                 f"(diag={n_diag}, max={n_cmax}, min={n_cmin}), "
@@ -741,11 +741,11 @@ def visualize_session(
                 n_async_cross_min_peaks=n_acmin,
             )
 
-            print(f"✅ Visualization: figure saved -> {out_png}")
+            logger.info(f"Visualization: figure saved -> {out_png}")
 
         except Exception as exc:
             msg = str(exc) or exc.__class__.__name__
-            print(f" Visualization failed for dataset '{name}': {msg}")
+            logger.info(f" Visualization failed for dataset '{name}': {msg}")
             errors.append((name, msg))
 
     if errors:

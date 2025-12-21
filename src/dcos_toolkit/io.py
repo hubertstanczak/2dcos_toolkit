@@ -9,6 +9,10 @@ import pandas as pd
 from .models import CDDataset
 from .utils import ensure_dir, sort_lambda_and_matrix
 
+
+import logging
+logger = logging.getLogger(__name__)
+
 __all__ = ["collect_cd_files_from_paths", "parse_cd_file", "parse_cd_files"]
 
 

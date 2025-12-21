@@ -7,6 +7,9 @@ from scipy.ndimage import maximum_filter
 _DEFAULT_EDGE_EXCLUSION = 1
 
 
+import logging
+logger = logging.getLogger(__name__)
+
 def _validate_grid(z: np.ndarray, x_vals: np.ndarray, y_vals: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Validate and normalize inputs for peak picking on a 2D grid.
 

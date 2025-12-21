@@ -2,6 +2,9 @@ import zipfile
 from pathlib import Path
 from typing import Iterable, Sequence
 
+import logging
+logger = logging.getLogger(__name__)
+
 from .models import SessionState
 from .utils import ensure_dir, make_base_name
 
@@ -314,9 +317,9 @@ def package_results(
     # 1) Inputs used to build per-file folders deterministically
     input_files = list_input_cd_files(session)
     if not input_files:
-        print("Export aborted: no input CD files found.")
-        print(f"Put *.csv/*.xls/*.xlsx into: {session.input_dir}")
-        print("If you used a ZIP, make sure it was extracted into the input directory.")
+        logger.debug("Export aborted: no input CD files found.")
+        logger.debug(f"Put *.csv/*.xls/*.xlsx into: {session.input_dir}")
+        logger.debug("If you used a ZIP, make sure it was extracted into the input directory.")
         raise RuntimeError("Export aborted (missing input files).")
 
     input_file_to_base: dict[Path, str] = {p: make_base_name(p) for p in input_files}
@@ -356,10 +359,10 @@ def package_results(
         )
 
     if missing_msgs:
-        print("Export aborted: requested files are missing.")
+        logger.warning("Export aborted: requested files are missing.")
         for m in missing_msgs:
-            print(m)
-        print("Either run the missing steps or set the corresponding include_* option to False.")
+            logger.warning(m)
+        logger.warning("Either run the missing steps or set the corresponding include_* option to False.")
         raise RuntimeError("Export aborted (missing requested artifacts).")
 
     # 3) Collect files
@@ -399,5 +402,5 @@ def package_results(
             zf.write(path, arcname=str(arcname))
             written += 1
 
-    print(f"Export: packed {written} file(s) into:\n  {zip_path}")
+    logger.info(f"Export: packed {written} file(s) into:\n  {zip_path}")
     return zip_path

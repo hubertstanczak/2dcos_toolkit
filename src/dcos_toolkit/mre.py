@@ -1,12 +1,14 @@
+import logging
+import numpy as np
+import pandas as pd
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-import numpy as np
-import pandas as pd
-
 from .models import SessionState
 from .utils import ensure_dir
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def _mre_factor(
@@ -227,7 +229,7 @@ def compute_mre_tables(session: SessionState, *, params: MREParams) -> float:
         path_length_mm=params.path_length_mm,
         molar_mass_g_mol=params.molar_mass_g_mol,
     )
-    print(f"Using MRE factor: {factor:.6g}")
+    logger.info(f"Using MRE factor: {factor:.6g}")
 
     failures: list[tuple[str, str]] = []
 
@@ -243,11 +245,11 @@ def compute_mre_tables(session: SessionState, *, params: MREParams) -> float:
                 lambda_axis=ds.lambda_axis,
                 perturbation_axis=ds.perturbation_axis,
             )
-            print(f"{ds.name}: MRE table saved to: {out_csv}")
+            logger.info(f"{ds.name}: MRE table saved to: {out_csv}")
         except Exception as exc:
             ds.mre = None
             msg = str(exc) or exc.__class__.__name__
-            print(f"{ds.name}: MRE table failed -> {msg}")
+            logger.info(f"{ds.name}: MRE calculations failed -> {msg}")
             failures.append((ds.name, msg))
 
     if failures:
@@ -307,11 +309,11 @@ def generate_mre_plots(
                 out_png=out_png,
                 show=show,
             )
-            print(f"{ds.name}: plot saved to: {out_png}")
+            logger.info(f"{ds.name}: plot saved to: {out_png}")
 
         except Exception as exc:
             msg = str(exc) or exc.__class__.__name__
-            print(f"{ds.name}: plot failed -> {msg}")
+            logger.error(f"{ds.name}: plot failed -> {msg}")
             failures.append((ds.name, msg))
 
     if failures:

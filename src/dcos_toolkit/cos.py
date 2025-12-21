@@ -7,6 +7,10 @@ import pandas as pd
 from .models import SessionState
 from .utils import ensure_dir
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 # Floating-point precision used in 2D-COS computations.
 # Use float64 for maximum precision (slower, larger files).
 FLOAT_DTYPE = np.float32
@@ -14,6 +18,7 @@ FLOAT_DTYPE = np.float32
 # Conversion used only when computing 2D-COS directly from CD values:
 # cd_mdeg (millidegrees) -> degrees
 MDEG_TO_DEG = FLOAT_DTYPE(1.0 / 1000.0)
+
 
 
 def _build_dynamic_spectra(spectra: np.ndarray, *, ref_mode: str) -> np.ndarray:
@@ -153,19 +158,19 @@ def compute_2dcos(
 
             n_spectra, n_lambda = spectra.shape
 
-            print(
-                f"2D-COS: dataset={ds.name} "
+            logger.debug(
+                f"2D-COS: dataset = {ds.name} "
                 f"(N={n_spectra}, L={n_lambda}, data={data_label}, ref={_reference_label(ref_mode)})"
             )
 
             if n_spectra < 3:
-                print(f"  skipped: not enough spectra (N={n_spectra}, need >= 3)")
+                logger.warning(f" {ds} skipped: not enough spectra, need >= 3)")
                 ds.sync = None
                 ds.async_ = None
                 continue
 
             if np.isnan(spectra).any():
-                print("  warning: NaN values detected in the input matrix; results may be unreliable")
+                logger.info(f"NaN values detected in the {ds}; results may be unreliable")
 
             dyn = _build_dynamic_spectra(spectra, ref_mode=ref_mode)
 
@@ -175,7 +180,7 @@ def compute_2dcos(
 
             sync_path = session.output_dir / f"{ds.name}_sync.csv"
             _save_square_csv(sync_path, ds.lambda_axis, sync)
-            print(f"  saved: {sync_path}")
+            logger.info(f" Saved: {sync_path}")
 
             N = _noda_matrix(n_spectra)
             async_map = dyn.T @ N @ dyn
@@ -184,13 +189,13 @@ def compute_2dcos(
 
             async_path = session.output_dir / f"{ds.name}_async.csv"
             _save_square_csv(async_path, ds.lambda_axis, async_map)
-            print(f"  saved: {async_path}")
+            logger.info(f" Saved: {async_path}")
 
         except Exception as exc:
             ds.sync = None
             ds.async_ = None
             msg = str(exc) or exc.__class__.__name__
-            print(f"2D-COS: failed for dataset '{ds.name}': {msg}")
+            logger.info(f"2D-COS: failed for dataset '{ds.name}': {msg}")
             errors.append((ds.name, msg))
 
     if errors:

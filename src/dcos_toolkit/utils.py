@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import numpy as np
-
+import logging
+logger = logging.getLogger(__name__)
 
 def ensure_dir(path: Path | str | None) -> None:
     """Ensure that a directory exists.

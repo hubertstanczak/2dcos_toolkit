@@ -5,6 +5,9 @@ from .io import collect_cd_files_from_paths, parse_cd_file
 from .models import SessionState
 from .utils import ensure_dir, make_base_name
 
+import logging
+logger = logging.getLogger(__name__)
+
 PathLike = str | Path
 
 def _dedupe_by_dataset_name(cd_files: list[str]) -> list[str]:
@@ -103,10 +106,10 @@ def load_input_data_and_parse(
                 raise ValueError("paths contains an empty path. Provide valid file/directory paths.")
             root_paths.append(Path(p_str))
 
-    print("\nInput data: scanning")
-    print("Roots:")
+    logger.debug("\nInput data: scanning")
+    logger.debug("Roots:")
     for rp in root_paths:
-        print(f" - {rp}")
+        logger.debug(f" - {rp}")
 
     cd_files = collect_cd_files_from_paths(
         [str(p) for p in root_paths],
@@ -124,14 +127,14 @@ def load_input_data_and_parse(
             "Supported: .csv, .xls, .xlsx (including .zip archives containing those)."
         )
 
-    print(f"\nFound {len(cd_files)} supported file(s):")
+    logger.info(f"\nFound {len(cd_files)} supported file(s):")
     for f in cd_files:
-        print(f" - {Path(f).name}")
+        logger.info(f" - {Path(f).name}")
 
     parsed = []
     skipped: list[tuple[str, str]] = []
 
-    print("\nParsing files...")
+    logger.info("\nParsing files...")
     for f in cd_files:
         try:
             ds = parse_cd_file(f)
@@ -147,20 +150,20 @@ def load_input_data_and_parse(
 
             parsed.append(ds)
             n_spec, n_lam = ds.cd_mdeg.shape
-            print(f"Parsed: {Path(f).name} -> dataset='{ds.name}' (spectra={n_spec}, lambda={n_lam})")
+            logger.info(f"Parsed: {Path(f).name}.")
 
         except Exception as exc:
             reason = str(exc) or exc.__class__.__name__
             skipped.append((f, reason))
-            print(f"Skipped: {Path(f).name} -> {reason}")
+            logger.info(f"Skipped: {Path(f).name} -> {reason}")
 
     session.cd_files = cd_files
     session.datasets = parsed
 
-    print("\nInput summary:")
-    print(f" found  : {len(cd_files)}")
-    print(f" parsed : {len(parsed)}")
-    print(f" skipped: {len(skipped)}")
+    logger.debug("\nInput summary:")
+    logger.debug(f" found  : {len(cd_files)}")
+    logger.debug(f" parsed : {len(parsed)}")
+    logger.debug(f" skipped: {len(skipped)}")
 
     if not parsed:
         raise RuntimeError(
@@ -170,11 +173,11 @@ def load_input_data_and_parse(
         )
 
     if skipped:
-        print("\nSkipped details:")
+        logger.debug("\nSkipped details:")
         for f, reason in skipped:
-            print(f" - {Path(f).name}: {reason}")
+            logger.debug(f" - {Path(f).name}: {reason}")
 
-    print("\nInput parsing complete.")
+    logger.info("\nInput parsing complete.")
     return session
 
 

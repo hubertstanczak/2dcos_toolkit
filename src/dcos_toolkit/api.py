@@ -1,5 +1,6 @@
-from curses import raw
 from pathlib import Path
+import logging
+import sys
 
 from .models import SessionState
 from .utils import ensure_dir, make_base_name
@@ -9,10 +10,32 @@ from .pipeline import load_input_data_and_parse
 from .mre import compute_mre
 from .plotting import visualize_session
 
+import logging
+logger = logging.getLogger(__name__)
 
 _INPUT_SUBDIR = "input_cd"
 _DEFAULT_JOB_NAME = "my_analysis"
 _DEFAULT_OUTPUT_DIR = "results"
+
+
+
+
+def setup_logging(level: str = "INFO", *, style: str = "colab") -> None:
+    import logging, sys
+
+    lvl = getattr(logging, level.upper(), logging.INFO)
+
+    fmt = "%(message)s" if style == "colab" else "%(levelname)s:%(name)s:%(message)s"
+
+    logging.basicConfig(
+        level=lvl,
+        format=fmt,
+        handlers=[logging.StreamHandler(sys.stdout)],
+        force=True,
+    )
+
+    logging.getLogger("dcos_toolkit").setLevel(lvl)
+
 
 
 def _sanitize_job_name(job_name: str, *, max_len: int = 60) -> str:
@@ -45,7 +68,7 @@ def _sanitize_job_name(job_name: str, *, max_len: int = 60) -> str:
         safe = _DEFAULT_JOB_NAME
 
     if raw and safe != raw:
-        print(f" job_name sanitized: {raw!r} -> {safe!r}")
+        logger.info(f"job_name sanitized: {raw!r} -> {safe!r}")
     return safe
 
 
