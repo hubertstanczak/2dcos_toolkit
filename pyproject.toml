@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dcos-toolkit"
+version = "0.1.0"
+description = "2D-COS toolkit for temperature-dependent CD spectra."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+
+dependencies = [
+  "numpy>=1.23",
+  "pandas>=1.5",
+  "matplotlib>=3.7",
+  "scipy>=1.10",
+  "openpyxl>=3.1",
+  "xlrd>=2.0.1",
+]
+
+[project.urls]
+Repository = "https://github.com/hubertstanczak/2dcos_toolkit"
+Colab = "https://colab.research.google.com/github/hubertstanczak/2dcos_toolkit/blob/main/notebooks/2dcos_toolkit_colab.ipynb"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dcos_toolkit*"]

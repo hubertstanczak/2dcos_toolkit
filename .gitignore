@@ -1,0 +1,48 @@
+# --- Python bytecode / caches ---
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Tooling caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Jupyter / IPython ---
+.ipynb_checkpoints/
+.profile_default/
+.ipython/
+
+# --- OS / editor files ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# --- Project data & outputs ---
+# keep inputs if you want to version small example files; otherwise ignore whole data/
+data/results/
+data/results/**
+
+# optional: if you never want to commit any input data
+# data/input_cd/
+# data/input_cd/**
+
+# --- Archives / binaries produced by exports ---
+*.zip
+
+# --- Logs ---
+*.log
