@@ -200,20 +200,20 @@ def compute_2dcos(
             ds.async_ = None
             msg = str(exc) or exc.__class__.__name__
             errors.append((ds.name, msg))
-            logger.info(f"2D-COS failed: {ds.name} ({msg})")
+            logger.info(f"2DCOS failed: {ds.name} ({msg})")
 
     if ok:
-        logger.info(f"2D-COS successfully computed for {len(ok)} dataset(s):")
+        logger.info(f"2DCOS successfully computed for {len(ok)} dataset(s):")
         for name in ok:
             logger.info(f"- {name}")
 
     if skipped:
-        logger.info(f"2D-COS skipped for {len(skipped)} dataset(s):")
+        logger.info(f"2DCOS skipped for {len(skipped)} dataset(s):")
         for name in skipped:
             logger.info(f"- {name}")
 
     if errors:
-        logger.info(f"2D-COS failed for {len(errors)} dataset(s) (will be skipped in next steps):")
+        logger.info(f"2DCOS failed for {len(errors)} dataset(s) (will be skipped in next steps):")
         for name, _ in errors:
             logger.info(f"- {name}")
 

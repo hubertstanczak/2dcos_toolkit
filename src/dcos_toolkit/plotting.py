@@ -651,7 +651,7 @@ def visualize_session(
                 logger.debug(f" Visualization: ignored out-of-range dataset index: {i} (valid: 0..{len(session.datasets)-1})")
 
         if not indices:
-            logger.info("Visualization: no valid dataset indices to visualize.")
+            logger.info("No valid dataset indices to visualize.")
             return
 
     errors: list[tuple[str, str]] = []
@@ -660,12 +660,11 @@ def visualize_session(
         ds = session.datasets[idx]
         name = ds.name
 
-        logger.info(f"\n Visualising dataset: {name}")
-
         if ds.sync is None:
-            logger.info(f" 2DCOS matrixes are missing. Run 2DCOS Calculation cell first.")
+            logger.info(f"2DCOS matrices are missing. Run the 2DCOS Calculation cell first.")
             continue
 
+        logger.info(f"\n Visualising dataset: {name}")
 
         try:
             lam = ds.lambda_axis

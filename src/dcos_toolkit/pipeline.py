@@ -127,7 +127,9 @@ def load_input_data_and_parse(
             "Supported: .csv, .xls, .xlsx (including .zip archives containing those)."
         )
 
-    logger.info(f"\nFound {len(cd_files)} supported file(s).")
+    logger.info(f"\nFound {len(cd_files)} supported file(s):")
+    for fp in cd_files:
+        logger.info(f"- {Path(fp).name}")
 
     parsed = []
     parsed_ok: list[str] = []
@@ -151,14 +153,16 @@ def load_input_data_and_parse(
             failed_parse.append(Path(f).name)
 
     if parsed_ok:
-        logger.info("Successfully parsed file(s):")
+        logger.info(f"\nSuccessfully parsed {len(parsed_ok)} file(s):")
         for name in parsed_ok:
             logger.info(f"- {name}")
 
     if failed_parse:
-        logger.info("Failed to parse files(s):")
+        logger.info(f"\nFailed to parse {len(failed_parse)} files(s):")
         for name in failed_parse:
             logger.info(f"- {name}")
+
+        logger.info("Common causes: wrong delimiter/decimal, non-numeric cells, corrupted file, unsupported layout.")
 
     session.cd_files = cd_files
     session.datasets = parsed
@@ -166,7 +170,6 @@ def load_input_data_and_parse(
     if not parsed:
         raise RuntimeError(
             "Input files were found, but none could be parsed.\n"
-            "See 'Skipped:' messages above for exact reasons.\n"
             "Common causes: wrong delimiter/decimal, non-numeric cells, corrupted file, unsupported layout."
         )
 

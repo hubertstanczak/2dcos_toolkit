@@ -219,7 +219,7 @@ def compute_mre_tables(session: SessionState, *, params: MREParams) -> float:
         If there are no datasets in the session or if any dataset fails.
     """
     if not session.datasets:
-        raise RuntimeError("MRE: no parsed CD datasets available. Load data first.")
+        raise RuntimeError("No parsed CD datasets available. Load data first.")
 
     ensure_dir(session.output_dir)
 
@@ -260,7 +260,7 @@ def compute_mre_tables(session: SessionState, *, params: MREParams) -> float:
             logger.info(f"- {name}")
 
     if failures:
-        logger.warning(f"MRE couldn't be calculated for {len(failures)} file(s) (will be skipped in next steps):")
+        logger.warning(f"MRE couldn't be calculated for {len(failures)} file(s):")
         for name, _ in failures:
             logger.warning(f"- {name}")
 

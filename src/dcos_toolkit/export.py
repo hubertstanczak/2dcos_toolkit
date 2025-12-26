@@ -403,5 +403,5 @@ def package_results(
             zf.write(path, arcname=str(arcname))
             written += 1
 
-    logger.info(f"Packed {written} file(s) into:\n {zip_path}")
+    logger.info(f"Packed {written} file(s) into:\n{zip_path.name}")
     return zip_path
