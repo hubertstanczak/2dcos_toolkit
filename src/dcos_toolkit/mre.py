@@ -183,13 +183,13 @@ def _coerce_and_validate_mre_params(
     m = to_float(molar_mass_g_mol, "molar_mass_g_mol")
 
     if n <= 0:
-        raise ValueError("MRE parameter 'residues_number' must be > 0.")
+        raise ValueError("MRE parameter 'residues_number' must be greater than 0.")
     if c <= 0:
-        raise ValueError("MRE parameter 'concentration_mg_ml' must be > 0.")
+        raise ValueError("MRE parameter 'concentration_mg_ml' must greater than 0.")
     if l <= 0:
-        raise ValueError("MRE parameter 'path_length_mm' must be > 0.")
+        raise ValueError("MRE parameter 'path_length_mm' must greater than 0.")
     if m <= 0:
-        raise ValueError("MRE parameter 'molar_mass_g_mol' must be > 0.")
+        raise ValueError("MRE parameter 'molar_mass_g_mol' must greater than 0.")
 
     return MREParams(
         residues_number=n,
@@ -219,7 +219,7 @@ def compute_mre_tables(session: SessionState, *, params: MREParams) -> float:
         If there are no datasets in the session or if any dataset fails.
     """
     if not session.datasets:
-        raise RuntimeError("MRE: no parsed CD datasets available. Run input parsing first.")
+        raise RuntimeError("MRE: no parsed CD datasets available. Load data first.")
 
     ensure_dir(session.output_dir)
 
@@ -231,6 +231,7 @@ def compute_mre_tables(session: SessionState, *, params: MREParams) -> float:
     )
     logger.info(f"Using MRE factor: {factor:.6g}")
 
+    ok: list[str] = []
     failures: list[tuple[str, str]] = []
 
     for ds in session.datasets:
@@ -238,25 +239,30 @@ def compute_mre_tables(session: SessionState, *, params: MREParams) -> float:
             theta_deg = np.asarray(ds.cd_mdeg, dtype=float) / 1000.0  # mdeg -> deg
             ds.mre = factor * theta_deg
 
-            out_csv = _save_mre_table(
+            _save_mre_table(
                 session,
                 dataset_name=ds.name,
                 mre=ds.mre,
                 lambda_axis=ds.lambda_axis,
                 perturbation_axis=ds.perturbation_axis,
             )
-            logger.info(f"{ds.name}: MRE table saved to: {out_csv}")
+
+            ok.append(ds.name)
+
         except Exception as exc:
             ds.mre = None
             msg = str(exc) or exc.__class__.__name__
-            logger.info(f"{ds.name}: MRE calculations failed -> {msg}")
             failures.append((ds.name, msg))
 
-    if failures:
-        details = "; ".join([f"{name} ({msg})" for name, msg in failures])
-        raise RuntimeError(f"MRE: failed to generate tables for: {details}")
+    if ok:
+        logger.info(f"MRE successfully calculated for {len(ok)} file(s):")
+        for name in ok:
+            logger.info(f"- {name}")
 
-    return factor
+    if failures:
+        logger.warning(f"MRE couldn't be calculated for {len(failures)} file(s) (will be skipped in next steps):")
+        for name, _ in failures:
+            logger.warning(f"- {name}")
 
 
 def generate_mre_plots(
@@ -309,7 +315,6 @@ def generate_mre_plots(
                 out_png=out_png,
                 show=show,
             )
-            logger.info(f"{ds.name}: plot saved to: {out_png}")
 
         except Exception as exc:
             msg = str(exc) or exc.__class__.__name__

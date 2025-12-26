@@ -316,11 +316,11 @@ def package_results(
 
     # 1) Inputs used to build per-file folders deterministically
     input_files = list_input_cd_files(session)
-    if not input_files:
-        logger.debug("Export aborted: no input CD files found.")
-        logger.debug(f"Put *.csv/*.xls/*.xlsx into: {session.input_dir}")
-        logger.debug("If you used a ZIP, make sure it was extracted into the input directory.")
-        raise RuntimeError("Export aborted (missing input files).")
+    if include_input_file and not input_files:
+        raise RuntimeError(
+            "Export aborted: no input CD files found.\n"
+            "Upload files first.\n"
+        )
 
     input_file_to_base: dict[Path, str] = {p: make_base_name(p) for p in input_files}
     input_resolved_to_base: dict[Path, str] = {p.resolve(): base for p, base in input_file_to_base.items()}
@@ -342,28 +342,30 @@ def package_results(
 
     if include_mre and count(_is_mre_table) == 0:
         missing_msgs.append(
-            "- include_mre=True, but no '*_mre.csv' found. Run compute_mre(...) first."
+            "- include_mre is True, but no MRE files are found."
         )
     if include_mre_plot and count(_is_mre_plot) == 0:
         missing_msgs.append(
-            "- include_mre_plot=True, but no '*_cd_plot.png' or '*_mre_plot.png' found. "
-            "Run compute_mre(..., generate_plot=True)."
+            "- include_mre_plot is True, but no MRE/CD plot files are found."
         )
     if include_2dcos and count(_is_2dcos_matrix) == 0:
         missing_msgs.append(
-            "- include_2dcos=True, but no '*_sync.csv' / '*_async.csv' found. Run compute_2dcos(...) first."
+            "- include_2dcos is True, but no 2DCOS matrix files are found."
         )
     if include_2dcos_plot and count(_is_2dcos_plot) == 0:
         missing_msgs.append(
-            "- include_2dcos_plot=True, but no '*_2dcos_combined.png' found. Run visualize_session(...) first."
+            "- include_2dcos_plot is True, but no 2DCOS plot files are found."
         )
 
     if missing_msgs:
-        logger.warning("Export aborted: requested files are missing.")
-        for m in missing_msgs:
-            logger.warning(m)
-        logger.warning("Either run the missing steps or set the corresponding include_* option to False.")
-        raise RuntimeError("Export aborted (missing requested artifacts).")
+        details = "\n".join(missing_msgs)
+
+        raise RuntimeError(
+            "Export cannot be created yet.\n"
+            "Some selected result types are missing:\n"
+            f"{details}\n"
+            "\nRun the missing step(s) or disable the corresponding include option(s) and try again."
+        )
 
     # 3) Collect files
     selected_files = collect_selected_files(
@@ -378,8 +380,7 @@ def package_results(
 
     if not selected_files:
         raise RuntimeError(
-            "Export: nothing selected for packaging.\n"
-            "This usually means output_dir is empty or naming does not match expected patterns."
+            "Nothing selected for packaging.\n"
         )
 
     # 4) Create ZIP
@@ -402,5 +403,5 @@ def package_results(
             zf.write(path, arcname=str(arcname))
             written += 1
 
-    logger.info(f"Export: packed {written} file(s) into:\n  {zip_path}")
+    logger.info(f"Packed {written} file(s) into:\n {zip_path}")
     return zip_path

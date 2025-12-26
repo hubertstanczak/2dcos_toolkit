@@ -152,7 +152,7 @@ def _detect_file_kind(path: Path) -> str:
         return "zip"
     if ext in {".xls", ".xlsx"}:
         return "excel"
-    if ext != ".csv":
+    if ext not in {".csv", ".txt"}:
         return "unsupported"
 
     # CSV: check whether it is actually a JASCO ASCII export (XYDATA marker).
@@ -208,7 +208,7 @@ def _read_csv_matrix(path: Path) -> pd.DataFrame:
     except Exception:
         first = ""
 
-    if first.startswith(";") or first.count(";") >= 4:
+    if first.startswith(";") or first.count(";") >= 3:
         return pd.read_csv(path, sep=";", decimal=",", engine="python", on_bad_lines="skip")
 
     if first.count("\t") >= 2:

@@ -123,7 +123,7 @@ def compute_2dcos(
     - If any dataset fails, the function prints per-dataset errors and raises RuntimeError at the end.
     """
     if not session.datasets:
-        raise RuntimeError("2D-COS: no parsed CD datasets found. Run input/parsing first.")
+        raise RuntimeError("No parsed CD datasets found. Load data first.")
 
     ref_mode = (reference_type or "mean").strip().lower()
     allowed = {"mean", "first", "last", "none"}
@@ -135,13 +135,14 @@ def compute_2dcos(
         if missing:
             missing_str = ", ".join(missing)
             raise RuntimeError(
-                "2D-COS: use_mre_for_2dcos=True but MRE is missing for:\n"
-                f"  {missing_str}\n"
-                "Run compute_mre(...) first."
+                "use_mre_for_2dcos is True, but MRE is not calculated yet."
+                "Run the MRE step first, or set use_mre_for_2dcos False to use raw data."
             )
 
     ensure_dir(session.output_dir)
 
+    ok: list[str] = []
+    skipped: list[str] = []
     errors: list[tuple[str, str]] = []
 
     for ds in session.datasets:
@@ -164,13 +165,14 @@ def compute_2dcos(
             )
 
             if n_spectra < 3:
-                logger.warning(f" {ds} skipped: not enough spectra, need >= 3)")
                 ds.sync = None
                 ds.async_ = None
+                skipped.append(ds.name)
+                logger.info(f"{ds.name} skipped - (not enough spectra; need >= 3).")
                 continue
 
             if np.isnan(spectra).any():
-                logger.info(f"NaN values detected in the {ds}; results may be unreliable")
+                logger.info(f"NaN values detected in {ds.name}; results may be unreliable")
 
             dyn = _build_dynamic_spectra(spectra, ref_mode=ref_mode)
 
@@ -180,7 +182,7 @@ def compute_2dcos(
 
             sync_path = session.output_dir / f"{ds.name}_sync.csv"
             _save_square_csv(sync_path, ds.lambda_axis, sync)
-            logger.info(f" Saved: {sync_path}")
+            logger.debug(f"Saved: {sync_path}")
 
             N = _noda_matrix(n_spectra)
             async_map = dyn.T @ N @ dyn
@@ -189,18 +191,32 @@ def compute_2dcos(
 
             async_path = session.output_dir / f"{ds.name}_async.csv"
             _save_square_csv(async_path, ds.lambda_axis, async_map)
-            logger.info(f" Saved: {async_path}")
+            logger.debug(f"Saved: {async_path}")
+
+            ok.append(ds.name)
 
         except Exception as exc:
             ds.sync = None
             ds.async_ = None
             msg = str(exc) or exc.__class__.__name__
-            logger.info(f"2D-COS: failed for dataset '{ds.name}': {msg}")
             errors.append((ds.name, msg))
+            logger.info(f"2D-COS failed: {ds.name} ({msg})")
+
+    if ok:
+        logger.info(f"2D-COS successfully computed for {len(ok)} dataset(s):")
+        for name in ok:
+            logger.info(f"- {name}")
+
+    if skipped:
+        logger.info(f"2D-COS skipped for {len(skipped)} dataset(s):")
+        for name in skipped:
+            logger.info(f"- {name}")
 
     if errors:
-        names = ", ".join(name for name, _ in errors)
-        raise RuntimeError(
-            "2D-COS finished with errors for some datasets.\n"
-            f"Failed: {names}"
-        )
+        logger.info(f"2D-COS failed for {len(errors)} dataset(s) (will be skipped in next steps):")
+        for name, _ in errors:
+            logger.info(f"- {name}")
+
+    if not ok:
+        failed_names = ", ".join(name for name, _ in errors) if errors else "all datasets"
+        raise RuntimeError(f"2D-COS: no results generated. Failed: {failed_names}")

@@ -28,7 +28,7 @@ def _dedupe_by_dataset_name(cd_files: list[str]) -> list[str]:
     list[str]
         File paths reduced to unique dataset names (stable order).
     """
-    chosen: dict[str, tuple[str, float, int]] = {}  # name -> (path, mtime, size)
+    chosen: dict[str, tuple[str, float, int]] = {}  
     order: list[str] = []
 
     for f in cd_files:
@@ -115,7 +115,7 @@ def load_input_data_and_parse(
         [str(p) for p in root_paths],
         input_dir=str(session.input_dir),
     )
-    
+
     cd_files = _dedupe_by_dataset_name(cd_files)
 
     if not cd_files:
@@ -127,43 +127,41 @@ def load_input_data_and_parse(
             "Supported: .csv, .xls, .xlsx (including .zip archives containing those)."
         )
 
-    logger.info(f"\nFound {len(cd_files)} supported file(s):")
-    for f in cd_files:
-        logger.info(f" - {Path(f).name}")
+    logger.info(f"\nFound {len(cd_files)} supported file(s).")
 
     parsed = []
-    skipped: list[tuple[str, str]] = []
+    parsed_ok: list[str] = []
+    failed_parse: list[str] = []
 
-    logger.info("\nParsing files...")
     for f in cd_files:
         try:
             ds = parse_cd_file(f)
 
-            # Canonical dataset name derived from input filename (deterministic)
             ds.name = make_base_name(Path(f), max_len=80)
 
-            # Optional: preserve source path (debug/export)
             try:
                 ds.source_path = str(f)
             except Exception:
                 pass
 
             parsed.append(ds)
-            n_spec, n_lam = ds.cd_mdeg.shape
-            logger.info(f"Parsed: {Path(f).name}.")
+            parsed_ok.append(Path(f).name)
 
-        except Exception as exc:
-            reason = str(exc) or exc.__class__.__name__
-            skipped.append((f, reason))
-            logger.info(f"Skipped: {Path(f).name} -> {reason}")
+        except Exception:
+            failed_parse.append(Path(f).name)
+
+    if parsed_ok:
+        logger.info("Successfully parsed file(s):")
+        for name in parsed_ok:
+            logger.info(f"- {name}")
+
+    if failed_parse:
+        logger.info("Failed to parse files(s):")
+        for name in failed_parse:
+            logger.info(f"- {name}")
 
     session.cd_files = cd_files
     session.datasets = parsed
-
-    logger.debug("\nInput summary:")
-    logger.debug(f" found  : {len(cd_files)}")
-    logger.debug(f" parsed : {len(parsed)}")
-    logger.debug(f" skipped: {len(skipped)}")
 
     if not parsed:
         raise RuntimeError(
@@ -172,13 +170,4 @@ def load_input_data_and_parse(
             "Common causes: wrong delimiter/decimal, non-numeric cells, corrupted file, unsupported layout."
         )
 
-    if skipped:
-        logger.debug("\nSkipped details:")
-        for f, reason in skipped:
-            logger.debug(f" - {Path(f).name}: {reason}")
-
-    logger.info("\nInput parsing complete.")
     return session
-
-
-__all__ = ["load_input_data_and_parse"]

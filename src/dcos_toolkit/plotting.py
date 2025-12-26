@@ -663,11 +663,10 @@ def visualize_session(
         logger.info(f"\n Visualising dataset: {name}")
 
         if ds.sync is None:
-            logger.info(f" Visualization: missing synchronous matrix for dataset: {name}. Run 2D-COS cell first.")
+            logger.info(f" 2DCOS matrixes are missing. Run 2DCOS Calculation cell first.")
             continue
 
-        if ds.async_ is None:
-            logger.info(f" Visualization: asynchronous matrix is missing for dataset: {name} (plot will omit async panel).")
+
         try:
             lam = ds.lambda_axis
             sync_df = pd.DataFrame(ds.sync, index=lam, columns=lam)
@@ -741,7 +740,7 @@ def visualize_session(
                 n_async_cross_min_peaks=n_acmin,
             )
 
-            logger.info(f"Visualization: figure saved -> {out_png}")
+            
 
         except Exception as exc:
             msg = str(exc) or exc.__class__.__name__

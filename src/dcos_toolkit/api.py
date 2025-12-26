@@ -56,6 +56,12 @@ def _sanitize_job_name(job_name: str, *, max_len: int = 60) -> str:
     avoid accidental nested paths in exported artifacts.
     """
     raw = (job_name or "").strip()
+
+    if not raw:
+        logger.info(f"job_name was empty, using default: {_DEFAULT_JOB_NAME}.")
+        return _DEFAULT_JOB_NAME
+
+
     safe = make_base_name(raw, max_len=max_len)
 
     if safe == "_unnamed":
@@ -68,9 +74,10 @@ def _sanitize_job_name(job_name: str, *, max_len: int = 60) -> str:
         safe = _DEFAULT_JOB_NAME
 
     if raw and safe != raw:
-        logger.info(f"job_name sanitized: {raw!r} -> {safe!r}")
+        logger.info(f"job_name contained unsupported characters, changed to: {safe}.")
     return safe
 
+    
 
 def _validate_output_dir(output_dir: str) -> Path:
     """Validate and normalize the output directory path.
