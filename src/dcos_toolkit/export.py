@@ -342,19 +342,19 @@ def package_results(
 
     if include_mre and count(_is_mre_table) == 0:
         missing_msgs.append(
-            "- include_mre is True, but no MRE files are found."
+            "- include_mre is True, but no MRE table files were found."
         )
     if include_mre_plot and count(_is_mre_plot) == 0:
         missing_msgs.append(
-            "- include_mre_plot is True, but no MRE/CD plot files are found."
+            "- include_mre_plot is True, but no MRE/CD plot files were found."
         )
     if include_2dcos and count(_is_2dcos_matrix) == 0:
         missing_msgs.append(
-            "- include_2dcos is True, but no 2DCOS matrix files are found."
+            "- include_2dcos is True, but no 2DCOS table files found."
         )
     if include_2dcos_plot and count(_is_2dcos_plot) == 0:
         missing_msgs.append(
-            "- include_2dcos_plot is True, but no 2DCOS plot files are found."
+            "- include_2dcos_plot is True, but no 2DCOS plot files were found."
         )
 
     if missing_msgs:

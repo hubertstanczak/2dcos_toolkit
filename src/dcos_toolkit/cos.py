@@ -135,8 +135,7 @@ def compute_2dcos(
         if missing:
             missing_str = ", ".join(missing)
             raise RuntimeError(
-                "use_mre_for_2dcos is True, but MRE is not calculated yet."
-                "Run the MRE step first, or set use_mre_for_2dcos False to use raw data."
+                "use_mre_for_2dcos is True, but MRE is not calculated yet. Run the MRE step first, or set use_mre_for_2dcos False to use raw data."
             )
 
     ensure_dir(session.output_dir)

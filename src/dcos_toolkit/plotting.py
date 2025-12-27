@@ -611,7 +611,7 @@ def visualize_session(
         If no datasets are present in the session.
     """
     if not session.datasets:
-        raise RuntimeError(" Visualization: No parsed CD datasets available. Run input/parsing first.")
+        raise RuntimeError("No parsed CD datasets available. Load input data first.")
 
     MAX_PEAKS = 5
 
