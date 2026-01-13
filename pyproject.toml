@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dcos-toolkit"
+version = "0.1.0"
+description = "2DCOS toolkit for temperature-dependent CD spectra."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+
+
+dependencies = [
+  "numpy",
+  "pandas",
+  "matplotlib",
+  "scipy",
+  "openpyxl",
+  "pytest" 
+]
+
+[project.urls]
+Repository = "https://github.com/hubertstanczak/2dcos_toolkit"
+
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dcos_toolkit*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra -q"

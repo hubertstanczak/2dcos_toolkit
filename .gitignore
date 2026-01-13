@@ -1,0 +1,43 @@
+# Python caches 
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.eggs/
+*.egg-info/
+dcos_toolkit.egg-info/
+dist/
+build/
+
+# Virtual environments 
+.venv/
+venv/
+env/
+ENV/
+
+#  Tooling caches 
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+.profile_default/
+.ipython/
+
+# Editor / IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Project data & outputs 
+data/results/
+
+# Archives 
+*.zip
+
+# Logs 
+*.log
