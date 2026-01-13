@@ -335,7 +335,7 @@ def visualize_session(
 ) -> None:
 
     if not session.datasets:
-        raise RuntimeError("No parsed CD datasets available.")
+        raise RuntimeError("No parsed CD datasets found. Please load data first.")
 
     MAX_PEAKS = 5
     peaks_conf = {

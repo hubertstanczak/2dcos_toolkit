@@ -14,28 +14,28 @@ logger = logging.getLogger(__name__)
 
 
 def collect_cd_files_from_paths(root_paths: list[str], *, input_dir: str) -> list[str]:
+    """
+    Collect all CSV files from given paths or ZIP archives.
+    Returns a list of unique absolute file paths.
+    """
     workspace = Path(input_dir)
     ensure_dir(workspace)
 
-    paths_to_check = []
-    for p in root_paths:
-        if p and p.strip():
-            paths_to_check.append(Path(p.strip()))
+    paths_to_check = [Path(p.strip()) for p in root_paths if p and p.strip()]
 
     collected_files = []
-    
+
     for path in paths_to_check:
         if path.is_file():
             if path.suffix.lower() == ".zip":
                 target_dir = workspace / f"_zip_{path.stem}"
-                
                 if target_dir.exists():
                     shutil.rmtree(target_dir)
                 ensure_dir(target_dir)
-                
+
                 if _extract_zip(path, target_dir):
                     collected_files.extend(target_dir.rglob("*.csv"))
-            
+
             elif path.suffix.lower() == ".csv":
                 collected_files.append(path)
 
@@ -44,10 +44,8 @@ def collect_cd_files_from_paths(root_paths: list[str], *, input_dir: str) -> lis
 
     unique_paths = []
     seen_paths = set()
-
     for p in collected_files:
         abs_path = str(p.resolve())
-      
         if abs_path not in seen_paths:
             seen_paths.add(abs_path)
             unique_paths.append(abs_path)
@@ -62,12 +60,12 @@ def parse_cd_file(path: str | Path) -> CDDataset:
     df_raw = _read_file_data(file_path)
     
     if df_raw is None:
-        raise ValueError(f"Failed to read table from file: {file_path.name}")
+        raise ValueError(f"Failed to read table from file.")
 
     dataset = _parse_to_dataset(df_raw, name=file_path.stem)
     
     if dataset is None:
-        raise ValueError(f"File does not contain valid numeric data: {file_path.name}")
+        raise ValueError(f"File does not contain valid numeric data.")
 
     return dataset
 
@@ -86,24 +84,18 @@ def parse_cd_files(paths: list[str]) -> list[CDDataset]:
 
 def _extract_zip(zip_path: Path, output_folder: Path) -> bool:
     try:
-        output_abs = output_folder.resolve()
         did_extract = False
-
         with zipfile.ZipFile(zip_path, "r") as zf:
             for file_info in zf.infolist():
                 if file_info.is_dir():
                     continue
 
-                target_file = (output_folder / file_info.filename).resolve()
-                if output_abs not in target_file.parents and output_abs != target_file:
-                    continue
-
+                target_file = output_folder / file_info.filename
                 ensure_dir(target_file.parent)
-                
-                with zf.open(file_info, "r") as source:
-                    with open(target_file, "wb") as target:
-                        shutil.copyfileobj(source, target)
-                
+
+                with zf.open(file_info) as source, open(target_file, "wb") as target:
+                    shutil.copyfileobj(source, target)
+
                 did_extract = True
 
         return did_extract
@@ -262,16 +254,25 @@ def _parse_to_dataset(df: pd.DataFrame, *, name: str) -> CDDataset | None:
 
     data_matrix = df.iloc[:, 1:].apply(pd.to_numeric, errors="coerce")
 
-    valid_mask = ~wavelengths.isna()
-    wavelengths = wavelengths[valid_mask]
-    data_matrix = data_matrix.loc[valid_mask]
+    valid_wavelengths = wavelengths.notna()
+    valid_data_rows = data_matrix.notna().all(axis=1)
 
-    if data_matrix.shape[1] == 0:
+    final_mask = valid_wavelengths & valid_data_rows
+    
+    n_total = len(df)
+    n_kept = final_mask.sum()
+    n_dropped = n_total - n_kept
+    
+    if n_dropped > 0:
+        logger.info(f"{name}': Skipped {n_dropped} rows due to non-numeric data or malformed cells.")
+
+    wavelengths = wavelengths[final_mask]
+    data_matrix = data_matrix.loc[final_mask]
+
+    if data_matrix.shape[0] == 0 or data_matrix.shape[1] == 0:
         return None
 
     lambda_arr = wavelengths.to_numpy(dtype=float)
-    
-
     cd_values = data_matrix.to_numpy(dtype=float).T
 
     try:

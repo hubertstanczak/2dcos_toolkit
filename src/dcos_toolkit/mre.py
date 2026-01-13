@@ -124,7 +124,7 @@ def _plot_spectra(
 def compute_mre_tables(session: SessionState, params: MREParams) -> float:
  
     if not session.datasets:
-        raise RuntimeError("No parsed CD datasets available. Load data first.")
+        raise RuntimeError("No parsed CD datasets found. Please load data first.")
 
     ensure_dir(session.output_dir)
 
@@ -173,7 +173,15 @@ def generate_mre_plots(
 ):
    
     if not session.datasets:
-        raise RuntimeError("MRE plots: no datasets in session.")
+        raise RuntimeError("No parsed CD datasets found. Please load data first.")
+    
+    if use_mre_for_plot:
+        missing_mre = [ds.name for ds in session.datasets if ds.mre is None]
+        if missing_mre:
+            raise RuntimeError(
+                "MRE has not been calculated yet. Run the MRE calculation step before plotting "
+            )
+
 
     ensure_dir(session.output_dir)
     out_dir = Path(session.output_dir)

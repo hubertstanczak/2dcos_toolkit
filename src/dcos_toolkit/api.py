@@ -50,15 +50,20 @@ def init_session(job_name: str = _DEFAULT_JOB_NAME, output_dir: str = _DEFAULT_O
         logger.info(f"Empty job_name provided, using default: {_DEFAULT_JOB_NAME}")
     else:
         cleaned = make_base_name(safe_job, max_len=60)
+
+        if cleaned == "dataset":
+            cleaned = _DEFAULT_JOB_NAME
+
         if cleaned != safe_job:
-            logger.info(f"Job name '{safe_job}' sanitized to '{cleaned}'")
-        safe_job = cleaned or _DEFAULT_JOB_NAME
+            logger.info(f"job_name adjusted to '{cleaned}'")
+        
+        safe_job = cleaned
 
     out_path_str = (output_dir or "").strip() or _DEFAULT_OUTPUT_DIR
     out_path = Path(out_path_str)
     
     if ".." in out_path.parts:
-        raise ValueError("Output directory name must not contain '..' ")
+        raise ValueError("Output directory must not contain '..' ")
 
     # Create Session
     session = SessionState(job_name=safe_job, output_dir=out_path)

@@ -21,7 +21,7 @@ def package_results(
     out_dir = Path(session.output_dir).resolve()
 
     if not session.datasets:
-        raise RuntimeError("No datasets in session. Load and process data first.")
+        raise RuntimeError("No parsed CD datasets found. Please load data first.")
 
     datasets = sorted(session.datasets, key=lambda d: d.name)
     
@@ -98,9 +98,10 @@ def package_results(
             try_add_file(out_dir / f"{ds.name}_MRE.csv", "MRE table")
 
         if include_mre_plot:
-            try_add_file(out_dir / f"{ds.name}_CD_plot.png", "CD plot")
             if ds.mre is not None:
                 try_add_file(out_dir / f"{ds.name}_MRE_plot.png", "MRE plot")
+            else:
+                try_add_file(out_dir / f"{ds.name}_CD_plot.png", "CD plot")
 
         if include_2dcos:
             try_add_file(out_dir / f"{ds.name}_sync.csv", "Sync table")
@@ -110,7 +111,7 @@ def package_results(
             try_add_file(out_dir / f"{ds.name}_2DCOS_combined.png", "2D-COS plot")
 
     if not files_to_pack:
-        raise RuntimeError("No files found to package. Check logs for details.")
+        raise RuntimeError("No files to download. Please select files first.")
 
     job_label = (session.job_name or "analysis").strip()
     zip_filename = f"{job_label}_2DCOS_results.zip"

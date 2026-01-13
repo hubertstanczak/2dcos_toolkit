@@ -31,17 +31,32 @@ def load_input_data_and_parse(
     for rp in root_paths:
         logger.debug(f" - {rp}")
 
-    # Collect CSV files 
     cd_files = collect_cd_files_from_paths(
         [str(p) for p in root_paths],
         input_dir=str(session.input_dir),
     )
 
-    # Deduplicate files 
     cd_files = _dedupe_files_by_name(cd_files)
 
+    if not cd_files:
+        has_any_files = False
+        if session.input_dir.exists():
+            for _ in session.input_dir.iterdir():
+                has_any_files = True
+                break
+        
+        if has_any_files:
+            raise RuntimeError(
+                "Input files were detected, but none are in a supported format.\n"
+                "Please verify the file extensions and ensure that the files contain valid data."
+            )
+        else:
+            raise RuntimeError("No input files found. Please upload .csv or .zip files.")
 
-    logger.info(f"\nFound {len(cd_files)} file(s). Parsing...")
+    logger.info(f"Found {len(cd_files)} supported file(s):")
+    for f in cd_files:
+        logger.info(f"- {Path(f).name}")
+
 
     parsed_datasets = []
     failed_files = []
@@ -55,25 +70,34 @@ def load_input_data_and_parse(
             ds.source_path = str(f_path.resolve())
 
             parsed_datasets.append(ds)
-            logger.info(f"- Parsed: {f_path.name}")
 
         except Exception as e:
-            failed_files.append(f"{f_path.name} ({e})")
+            failed_files.append((f_path.name, str(e)))
+
+    if parsed_datasets:
+        logger.info(f"Successfully parsed {len(parsed_datasets)} file(s):")
+        for ds in parsed_datasets:
+            logger.info(f"- {ds.name}")
 
     if failed_files:
-        logger.info(f"\nFailed to parse {len(failed_files)} file(s):")
-        logger.info("Check file format: expected CSV with numeric data.")
+        logger.info("")
+        logger.info(f"Failed to parse {len(failed_files)} file(s):")
+        for fname, error_msg in failed_files:
+            logger.info(f"- {fname}")
+            logger.info(f"  Error: {error_msg}")
 
-    # Update Session
+        
+        logger.info("\nCheck file structure: expected CSV with numeric data.")
+
     session.cd_files = cd_files
     session.datasets = parsed_datasets
 
     if not parsed_datasets:
         raise RuntimeError(
             "Input files were found, but none could be parsed successfully.\n"
+            "Check file structure: expected CSV with numeric data."
         )
     
-    logger.info(f"\nSuccessfully loaded {len(parsed_datasets)} dataset(s).")
     return session
 
 
