@@ -4,7 +4,7 @@ A notebook-first toolkit designed to process temperature-dependent **Circular Di
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hubertstanczak/2dcos_toolkit/blob/main/notebooks/2dcos_toolkit_colab.ipynb)
 
-The repository includes sample datasets (`Dim.csv` and `Tri_2.csv`) used for automated testing. Files are located in the tests/data/ directory.
+The repository includes sample datasets. Files are located in the tests/data/ directory.
 
 ---
 
@@ -113,6 +113,6 @@ The visualization module includes an automated peak picker with the following fe
 
 ---
 
-## 📄 License
+## License
 
 MIT License
