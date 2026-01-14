@@ -75,7 +75,8 @@ def load_input_data_and_parse(
             failed_files.append((f_path.name, str(e)))
 
     if parsed_datasets:
-        logger.info(f"Successfully parsed {len(parsed_datasets)} file(s):")
+        logger.info("")
+        logger.info(f"Successfully parsed {len(parsed_datasets)} dataset(s):")
         for ds in parsed_datasets:
             logger.info(f"- {ds.name}")
 

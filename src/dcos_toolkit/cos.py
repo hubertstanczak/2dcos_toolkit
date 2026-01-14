@@ -47,8 +47,8 @@ def compute_2dcos(session: SessionState, *, use_mre_for_2dcos: bool, reference_t
 
     if use_mre_for_2dcos and any(ds.mre is None for ds in session.datasets):
         raise RuntimeError(
-            "use_mre_for_2dcos option is checked, but MRE is not calculated yet.\n"
-            "Run the MRE step first, or uncheck use_mre_for_2dcos option to use raw data."
+            "2DCOS mode is set to use MRE, but MRE has not been calculated yet.\n"
+            "Please run the MRE calculation step first, or switch 2DCOS mode to use raw data."
         )
 
     ref_mode = (reference_type or "mean").strip().lower()
@@ -115,7 +115,7 @@ def compute_2dcos(session: SessionState, *, use_mre_for_2dcos: bool, reference_t
         raise RuntimeError(f"No 2DCOS results generated.")
 
     if ok:
-        logger.info(f"2DCOS successfully computed for {len(ok)} dataset(s):")
+        logger.info(f"2DCOS successfully calculated for {len(ok)} dataset(s):")
         for name in ok:
             logger.info(f"- {name}")
 

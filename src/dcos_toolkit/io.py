@@ -41,6 +41,15 @@ def collect_cd_files_from_paths(root_paths: list[str], *, input_dir: str) -> lis
 
         elif path.is_dir():
             collected_files.extend(path.rglob("*.csv"))
+            
+            for zip_path in path.rglob("*.zip"):
+                target_dir = workspace / f"_zip_{zip_path.stem}"
+                if target_dir.exists():
+                    shutil.rmtree(target_dir)
+                ensure_dir(target_dir)
+
+                if _extract_zip(zip_path, target_dir):
+                    collected_files.extend(target_dir.rglob("*.csv"))
 
     unique_paths = []
     seen_paths = set()
